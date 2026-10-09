@@ -1,0 +1,21 @@
+{
+  "name": "hibikiniwa-instruments",
+  "version": "1.0.0",
+  "description": "響庭（Hibikiniwa）楽器群 — HYPOGEUM // KKR-40（低域ドローン）と STOMA//16（植物細胞の形からリズムを作る）。ビルドなし・ES Modules・本体の依存ゼロ。",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "codebook": "node scripts/codebook.mjs",
+    "serve": "node scripts/serve.mjs 8080"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.60",
+    "node-web-audio-api": "^1.0.9"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
