@@ -1,15 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import {
   PRODUCT, GROUP_CODES, PARAM_CODES, STATE_CODES, OPTION_CODES, ENGINE_CODES, REGION_CODES, TUNING_CODES,
   SCALE_CODE_PARTS, SCENE_CODES, scaleCode,
-} from '../js/codebook.js';
-import { GROUPS, PARAMS, SCENES, PARAM_BY_KEY } from '../js/params.js';
-import { SCALES } from '../js/scales.js';
-import { ENGINE_IDS, ENGINES } from '../js/engines/index.js';
-import { renderCodebook } from '../scripts/codebook-md.mjs';
+} from '../apps/hypogeum/js/codebook.js';
+import { GROUPS, PARAMS, SCENES, PARAM_BY_KEY } from '../apps/hypogeum/js/params.js';
+import { SCALES } from '../apps/hypogeum/js/scales.js';
+import { ENGINE_IDS, ENGINES } from '../apps/hypogeum/js/engines/index.js';
 
 const nonEmpty = (s) => typeof s === 'string' && s.trim().length > 0;
 
@@ -70,9 +67,4 @@ test('全コードが一意（グループ・パラメータ・状態・選択�
   }
   // エンジン内のマクロ短縮名も一意
   for (const [id, e] of Object.entries(ENGINE_CODES)) assert.equal(new Set(e.macros.map((m) => m[0])).size, 3, id);
-});
-
-test('docs/CODEBOOK.md が最新（node scripts/codebook.mjs で再生成）', () => {
-  const file = readFileSync(fileURLToPath(new URL('../docs/CODEBOOK.md', import.meta.url)), 'utf8');
-  assert.equal(file, renderCodebook());
 });

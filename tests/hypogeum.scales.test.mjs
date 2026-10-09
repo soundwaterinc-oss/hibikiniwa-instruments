@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SCALES, ROOT_PRESETS, parsePitchList, parseScl, nearestFifthIndex } from '../js/scales.js';
-import { PARAMS, SCENES, DEFAULTS, PARAM_BY_KEY } from '../js/params.js';
+import { SCALES, ROOT_PRESETS, parsePitchList, parseScl, nearestFifthIndex } from '../apps/hypogeum/js/scales.js';
+import { PARAMS, SCENES, DEFAULTS, PARAM_BY_KEY } from '../apps/hypogeum/js/params.js';
 
 test('全音階：53種、0cから始まり、昇順で、1200c未満', () => {
   assert.equal(SCALES.length, 53);

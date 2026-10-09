@@ -3,10 +3,10 @@
 //   合格条件：NaNなし / ピーク ≤ 0.95 / DC成分 < 0.01 / スペクトル重心 < 500Hz
 // あわせて 40Hz AM の変調深さ（深さ1.0で包絡の最小値がほぼ0）と、タンプーラ（撥弦）モードの発音を確認する。
 import { OfflineAudioContext } from 'node-web-audio-api';
-import { DroneEngine } from '../js/engine.js';
-import { DEFAULTS } from '../js/params.js';
-import { ENGINE_IDS } from '../js/engines/index.js';
-import { ENGINE_CODES } from '../js/codebook.js';
+import { DroneEngine } from '../apps/hypogeum/js/engine.js';
+import { DEFAULTS } from '../apps/hypogeum/js/params.js';
+import { ENGINE_IDS } from '../apps/hypogeum/js/engines/index.js';
+import { ENGINE_CODES } from '../apps/hypogeum/js/codebook.js';
 
 const SR = 48000;
 const DUR = 2;
@@ -109,7 +109,7 @@ for (const ams of ['sine', 'pulse']) {
     dur: 1.2,
     prepare(eng, ctx) {
       eng.filter.disconnect();       // ドローンを AM 段から外す
-      eng.analyser.disconnect();     // 通常出力を外す
+      eng.master.output.disconnect(); // 通常出力を外す
       const probe = ctx.createConstantSource();
       probe.connect(eng.amGain);
       eng.amGain.connect(ctx.destination);

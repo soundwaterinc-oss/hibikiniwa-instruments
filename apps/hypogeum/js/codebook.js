@@ -66,7 +66,7 @@ export const PARAM_CODES = {
   hpf: { code: 'HPF.ω', plain: 'サブソニック・ハイパス（24dB/oct）' },
   monoX: { code: 'MONO.x', plain: 'モノ化クロスオーバー（これより下はモノ）' },
   psy: { code: 'PSY.h', plain: '倍音エンハンサー（ミッシング・ファンダメンタル）' },
-  drv: { code: 'DRV', plain: 'ソフトクリップ（リミッター前）' },
+  drv: { code: 'DRV', plain: 'ソフトクリップ（共通マスター段、リミッター前）' },
 
   vol: { code: 'VOL', plain: '音量' },
   fin: { code: 'F.in', plain: 'フェードイン' },
@@ -91,7 +91,7 @@ export const OPTION_CODES = {
 // ── 音色エンジン ─────────────────────────────
 // macros: [Α, Β, Γ] それぞれ [短いコード, 平文]
 export const ENGINE_CODES = {
-  add: { code: 'ADD.H', plain: '加算合成（PeriodicWave倍音列）', macros: [['BRT', '明るさ（倍音の傾き）'], ['SPR', 'ユニゾンの広がり'], ['SAT', '飽和']] },
+  add: { code: 'ADD.H', plain: '加算合成（PeriodicWave倍音列）', macros: [['H.n×', '倍音数（H.n からの増減）'], ['ρ±', '減衰（ρ からの増減）'], ['O/E±', '奇偶（O/E からの増減）']] },
   sin: { code: 'SIN.0', plain: '純正弦＋2倍音・tanh飽和', macros: [['H2', '2倍音量'], ['SAT', '飽和'], ['H3', '3倍音量']] },
   reese: { code: 'R33S', plain: 'リース・ベース（デチューンしたノコギリ波2〜4本）', macros: [['DTN', 'デチューン幅'], ['N.os', '本数（2〜4）'], ['LP', 'ローパスの開き']] },
   fm2: { code: 'FM.2', plain: '2オペレーターFM', macros: [['IDX', '変調指数'], ['RAT', '周波数比（0.5/1/2/3）'], ['FB~', 'フィードバック風の歪み']] },

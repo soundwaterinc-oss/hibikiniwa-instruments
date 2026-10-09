@@ -10,24 +10,15 @@
 //                                              PSY.h: 低域抽出 ─▶ 2・3倍音生成 ─▶ HP ─────────┘(加算)     │
 //   isochronic / binaural ─▶ therapyBus（モノ化・残響を通さない＝左右差を保つ）──────────────────────────────┤
 //                                                       mix ◀──────────────────────────────────────────────┘
-//   mix ─▶ sessionGain ─▶ volume ─▶ DRV(ソフトクリップ) ─▶ limiter ─▶ ceiling(≤0.95) ─▶ analyser ─▶ out
+//   mix ─▶ sessionGain ─▶ volume ─▶ 共通マスター段（packages/core/master.js：DC → DRV → ルックアヘッド・リミッター → メーター）─▶ out
 import { getScale, parsePitchList, nearestFifthIndex } from './scales.js';
 import { DEFAULTS, PARAM_BY_KEY, normalizeImport, sanitize } from './params.js';
 import { getEngine, VOICE_BUDGET } from './engines/index.js';
-import { lp, hp, tanhCurve } from './engines/util.js';
+import { lp, hp } from './engines/util.js';
+import { createMaster } from '../../../packages/core/master.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const rand = (a, b) => a + Math.random() * (b - a);
-
-// 天井：0.8までは線形、その上は 0.93 へ柔らかく収める（ピーク≤0.95の保証）
-const CEILING = (() => {
-  const n = 4096, c = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    const x = (i / (n - 1)) * 2 - 1, a = Math.abs(x);
-    c[i] = a < 0.8 ? x : Math.sign(x) * (0.8 + 0.15 * Math.tanh((a - 0.8) / 0.15));
-  }
-  return c;
-})();
 
 // PSY.h：低域から2倍音（x²）と3倍音（x³）を作る。直流は後段のHPで除く
 const PSY_CURVE = (() => {
@@ -132,27 +123,14 @@ export class DroneEngine {
 
     this.sessionGain = g(0);
     this.volumeGain = g(0.5);
-    // DRV：オフのときは素通し、オンのときはソフトクリップ側へ切り替える
-    this.driveDry = g(1);
-    this.driveWet = g(0);
-    this.driveShaper = ctx.createWaveShaper();
-    this.driveShaper.curve = tanhCurve(1);
-    this.driveSum = g(1);
-    this.limiter = ctx.createDynamicsCompressor();
-    this.limiter.threshold.value = -8;
-    this.limiter.knee.value = 2;
-    this.limiter.ratio.value = 20;
-    this.limiter.attack.value = 0.003;
-    this.limiter.release.value = 0.3;
-    this.ceiling = ctx.createWaveShaper();
-    this.ceiling.curve = CEILING;
+    // 共通マスター段：DCカット → DRV（ソフトクリップ）→ ルックアヘッド・リミッター → メーター
+    this.master = createMaster(ctx);
+    this.mix.connect(this.sessionGain).connect(this.volumeGain).connect(this.master.input);
+    // 位相ダイヤル用のスペクトル（マスター出力から分岐）
     this.analyser = ctx.createAnalyser();
     this.analyser.fftSize = 16384;
     this.analyser.smoothingTimeConstant = 0.88;
-    this.mix.connect(this.sessionGain).connect(this.volumeGain);
-    this.volumeGain.connect(this.driveDry).connect(this.driveSum);
-    this.volumeGain.connect(this.driveShaper).connect(this.driveWet).connect(this.driveSum);
-    this.driveSum.connect(this.limiter).connect(this.ceiling).connect(this.analyser).connect(ctx.destination);
+    this.master.output.connect(this.analyser);
 
     // 療法用LFO（AM・アイソクロニックで共有し位相を揃える）
     this.therapyLfo = ctx.createOscillator();
@@ -337,13 +315,7 @@ export class DroneEngine {
       [this.hpfA, this.hpfB].forEach((f) => set(f.frequency, p.hpf));
       [this.xLowA, this.xLowB, this.xHighA, this.xHighB].forEach((f) => set(f.frequency, p.monoX));
       set(this.psyGain.gain, p.psy * 0.6);
-      if (this.driveVal !== p.drv) {
-        this.driveVal = p.drv;
-        if (p.drv > 0) this.driveShaper.curve = tanhCurve(1 + p.drv * 8);
-        const on = p.drv > 0 ? 1 : 0;
-        set(this.driveDry.gain, 1 - on, 0.03);
-        set(this.driveWet.gain, on / (1 + p.drv * 1.5), 0.03);
-      }
+      if (this.driveVal !== p.drv) { this.driveVal = p.drv; this.master.setDrive(p.drv, t); }
       if (key === 'rvt') {
         clearTimeout(this.irTimer);
         this.irTimer = setTimeout(() => this.buildImpulse(), 250);
@@ -419,6 +391,23 @@ export class DroneEngine {
       }
     }
     this.convolver.buffer = buf;
+  }
+
+  // GARDEN BUS：吸い始めを時刻 at（ctx 時間）に合わせ直す。ずれが50ms未満なら何もしない
+  alignBreath(at) {
+    const b = this.breath;
+    if (!this.ctx || !b.period) return false;
+    const off = (((at - b.anchor) % b.period) + b.period) % b.period;
+    if (Math.min(off, b.period - off) < 0.05) return false;
+    const t = this.ctx.currentTime;
+    const g = this.breathGain.gain, det = this.filter.detune;
+    const lo = 1 - this.p.pamp;
+    [g, det].forEach((prm) => { prm.cancelScheduledValues(t); prm.setValueAtTime(prm.value, t); });
+    g.linearRampToValueAtTime(lo, at);
+    det.linearRampToValueAtTime(0, at);
+    this.breath = { ...b, anchor: at, next: at };
+    this.scheduleBreaths();
+    return true;
   }
 
   // ── 共鳴呼吸：音量とフィルターを呼吸の形で満ち引きさせる ──

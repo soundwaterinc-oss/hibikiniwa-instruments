@@ -1,17 +1,15 @@
-// docs/CODEBOOK.md の本文を組み立てる（scripts/codebook.mjs と tests から使う）
-import { PRODUCT, GROUP_CODES, STATE_CODES, OPTION_CODES, ENGINE_CODES, REGION_CODES, TUNING_CODES, SCENE_CODES, LEGACY_KEYS, scaleCode, registerOf } from '../js/codebook.js';
-import { PARAMS, SCENES } from '../js/params.js';
-import { SCALES } from '../js/scales.js';
+// docs/CODEBOOK.md の HYPOGEUM の章を組み立てる（scripts/codebook.mjs と tests から使う）
+import { PRODUCT, GROUP_CODES, STATE_CODES, OPTION_CODES, ENGINE_CODES, REGION_CODES, TUNING_CODES, SCENE_CODES, LEGACY_KEYS, scaleCode, registerOf } from '../apps/hypogeum/js/codebook.js';
+import { PARAMS, SCENES } from '../apps/hypogeum/js/params.js';
+import { SCALES } from '../apps/hypogeum/js/scales.js';
 
 const esc = (s) => String(s).replace(/\|/g, '\\|');
 const row = (...cells) => `| ${cells.map(esc).join(' | ')} |`;
 
 export function renderCodebook() {
   const L = [];
-  L.push(`# CODEBOOK — ${PRODUCT.code}`, '');
-  L.push('> このファイルは `node scripts/codebook.mjs` で `js/codebook.js` から自動生成しています。手で編集しないでください。', '');
-  L.push(`**${PRODUCT.code}** = ${PRODUCT.plain}`, '');
-  L.push('UIでは [DECODE] を押すと、すべてのラベルにここの平文が併記されます。各コントロールの `title` と `aria-label` には常に平文が入っています。安全注意だけは暗号化していません。', '');
+  L.push(`# ${PRODUCT.code}`, '');
+  L.push(`**${PRODUCT.code}** = ${PRODUCT.plain}（\`apps/hypogeum/js/codebook.js\`）`, '');
 
   L.push('## グループ', '', row('コード', '平文'), row('---', '---'));
   for (const g of Object.values(GROUP_CODES)) L.push(row(g.code, g.plain));
@@ -56,5 +54,6 @@ export function renderCodebook() {
   const codeOf = (k) => PARAMS.find((p) => p.key === k)?.code || STATE_CODES[k]?.code || '';
   for (const [a, b] of Object.entries(LEGACY_KEYS)) L.push(row(`\`${a}\``, `\`${b}\``, codeOf(b)));
   L.push('');
-  return L.join('\n');
+  // 章の中の見出しを1段下げる（全体の CODEBOOK.md では「#」がアプリ名）
+  return L.join('\n').replace(/^(#{2,3}) /gm, '#$1 ');
 }

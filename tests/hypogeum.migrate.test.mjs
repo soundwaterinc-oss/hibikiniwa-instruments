@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LEGACY_KEYS, LEGACY_STORE_KEY, STORE_KEY } from '../js/codebook.js';
-import { DEFAULTS, migrateV1, normalizeImport } from '../js/params.js';
+import { LEGACY_KEYS, LEGACY_STORE_KEY, STORE_KEY } from '../apps/hypogeum/js/codebook.js';
+import { DEFAULTS, migrateV1, normalizeImport } from '../apps/hypogeum/js/params.js';
 
 // KUKURU v1 が保存していた全キー
 const V1_KEYS = [
