@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KUKURU Drone</title>
+<meta name="description" content="音楽療法の知見（40Hz聴覚刺激・共鳴呼吸・バイノーラル）と世界の民族音階を統合したパラメトリック・ドローン楽器">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <h1>KUKURU<span class="brand-ja">くくる・心の持続音</span></h1>
+      <p class="lede">世界の音階と、40Hz・共鳴呼吸・バイノーラルを重ねるドローン楽器。</p>
+    </div>
+    <div class="transport">
+      <span id="clock" class="clock" aria-live="off">00:00</span>
+      <button id="play" class="play" type="button" aria-pressed="false">鳴らす</button>
+    </div>
+  </header>
+
+  <details class="safety" open>
+    <summary>はじめに・安全のために</summary>
+    <ul>
+      <li>音量は小さめから。耳に圧迫感があればすぐ下げてください。</li>
+      <li>てんかん・光や音への過敏症、耳鳴り、心臓ペースメーカー使用中の方は、医師に相談のうえで使用してください。</li>
+      <li>運転中・機械操作中は使わないでください。眠気を誘う設定があります。</li>
+      <li>本アプリは医療機器ではなく、診断・治療を目的としません。研究知見を音として体験する道具です。</li>
+    </ul>
+  </details>
+
+  <main class="stage">
+    <section class="instrument" aria-label="音階と可視化">
+      <canvas id="circle" class="circle" aria-label="音階円。鳴っている度数と倍音の分布を表示"></canvas>
+
+      <div class="scale-pick">
+        <label for="scale" class="eyebrow">音階</label>
+        <select id="scale"></select>
+        <p id="scale-meta" class="meta"></p>
+        <p id="scale-note" class="note"></p>
+        <div id="custom-box" class="custom-box" hidden>
+          <label for="custom-cents" class="eyebrow">ピッチ一覧</label>
+          <textarea id="custom-cents" rows="2" spellcheck="false" placeholder="0, 9/8, 5/4, 4/3, 3/2, 7/4"></textarea>
+          <label class="file-btn" for="scl-file">Scala (.scl) を読み込む</label>
+          <input id="scl-file" type="file" accept=".scl,text/plain" class="visually-hidden">
+        </div>
+      </div>
+
+      <div class="degrees-wrap">
+        <div class="row-head">
+          <span class="eyebrow">鳴らす度数</span>
+          <div class="chips small">
+            <button id="deg-fifth" class="chip" type="button">根音＋5度</button>
+            <button id="deg-root" class="chip" type="button">根音のみ</button>
+            <button id="deg-all" class="chip" type="button">全部</button>
+          </div>
+        </div>
+        <div id="degrees" class="degrees"></div>
+      </div>
+
+      <div class="scenes-wrap">
+        <span class="eyebrow">シーン</span>
+        <div id="scenes" class="scenes"></div>
+        <p id="scene-desc" class="note" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="panels" class="panels" aria-label="パラメータ"></section>
+  </main>
+
+  <section class="io" aria-label="保存と接続">
+    <div class="io-btns">
+      <button id="copy-json" class="chip" type="button">設定をコピー</button>
+      <button id="load-json" class="chip" type="button">貼り付けた設定を読込</button>
+      <button id="midi" class="chip" type="button">MIDIをつなぐ</button>
+      <button id="reset" class="chip" type="button">初期値に戻す</button>
+    </div>
+    <p id="io-msg" class="note" aria-live="polite">スライダーはダブルクリックで初期値。スペースキーで再生・停止。</p>
+    <label for="json" class="visually-hidden">設定JSON</label>
+    <textarea id="json" rows="3" spellcheck="false" placeholder="書き出した設定JSONをここに貼り付け"></textarea>
+  </section>
+
+  <footer class="foot">
+    <p>40Hz聴覚刺激、6回/分の共鳴呼吸、バイノーラルビートの研究背景と限界は README に記載しています。音階の実測値（ガムラン・ムビラ等）は代表的な近似です。</p>
+  </footer>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
