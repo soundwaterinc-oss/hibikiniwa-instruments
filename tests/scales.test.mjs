@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SCALES, parsePitchList, parseScl, nearestFifthIndex } from '../js/scales.js';
-import { PARAMS, SCENES, DEFAULTS } from '../js/params.js';
+import { SCALES, ROOT_PRESETS, parsePitchList, parseScl, nearestFifthIndex } from '../js/scales.js';
+import { PARAMS, SCENES, DEFAULTS, PARAM_BY_KEY } from '../js/params.js';
 
-test('全音階：0cから始まり、昇順で、1200c未満', () => {
+test('全音階：53種、0cから始まり、昇順で、1200c未満', () => {
+  assert.equal(SCALES.length, 53);
   const ids = new Set();
   for (const s of SCALES) {
     assert.ok(!ids.has(s.id), `ID重複: ${s.id}`);
@@ -40,12 +41,32 @@ test('5度探索', () => {
   assert.equal(nearestFifthIndex([0, 240, 480, 960]), -1);
 });
 
-test('シーンは既知のパラメータだけを使う', () => {
-  for (const sc of SCENES) for (const k of Object.keys(sc.params)) assert.ok(k in DEFAULTS, `${sc.id}: ${k}`);
+test('シーンは既知のパラメータだけを使い、値は範囲内', () => {
   for (const sc of SCENES) {
-    const s = SCALES.find((x) => x.id === sc.params.scaleId);
+    for (const [k, v] of Object.entries(sc.params)) {
+      assert.ok(k in DEFAULTS, `${sc.id}: ${k}`);
+      const p = PARAM_BY_KEY[k];
+      if (p && p.type !== 'select') assert.ok(v >= p.min && v <= p.max, `${sc.id}: ${k}=${v} が範囲外`);
+      if (p && p.type === 'select') assert.ok(p.options.includes(v), `${sc.id}: ${k}=${v}`);
+    }
+    const s = SCALES.find((x) => x.id === sc.params.scl);
     assert.ok(s, `${sc.id} の音階`);
-    for (const d of sc.params.degrees) assert.ok(d < s.cents.length, `${sc.id} の度数 ${d}`);
+    for (const d of sc.params.deg) assert.ok(d < s.cents.length, `${sc.id} の度数 ${d}`);
   }
   for (const p of PARAMS) if (p.type !== 'select') assert.ok(p.def >= p.min && p.def <= p.max, p.key);
+});
+
+test('低域仕様：F₀は20〜250Hz、初期値E1=41.2Hz、キャリア下限120Hz、プリセットも範囲内', () => {
+  assert.equal(PARAM_BY_KEY.f0.min, 20);
+  assert.equal(PARAM_BY_KEY.f0.max, 250);
+  assert.equal(DEFAULTS.f0, 41.2);
+  assert.equal(PARAM_BY_KEY.car.min, 120);
+  for (const r of ROOT_PRESETS) assert.ok(r.hz >= 20 && r.hz <= 250, r.label);
+});
+
+test('低域プリセット PRG-B01〜B12 が全エンジン（ADD.H以外）を1つ以上使う', () => {
+  const b = SCENES.filter((s) => /^b\d\d$/.test(s.id));
+  assert.equal(b.length, 12);
+  const engines = new Set(b.map((s) => s.params.eng));
+  for (const e of PARAM_BY_KEY.eng.options.filter((x) => x !== 'add')) assert.ok(engines.has(e), `プリセットのないエンジン: ${e}`);
 });
