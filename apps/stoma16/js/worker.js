@@ -5,6 +5,7 @@
 //   { type:'score', id, key, params }         → { type:'scored', id, r }（AUTO の候補1つ）
 import { analyze, usableCells } from './analysis/index.js';
 import { quality } from './analysis/auto.js';
+import { renderSpecimen } from './specimens.js';
 
 const images = new Map(); // key → { img, cache }
 
@@ -17,6 +18,12 @@ function pack(A) {
 self.onmessage = (e) => {
   const m = e.data;
   try {
+    if (m.type === 'specimen') {
+      // 標本の生成も Worker で（100ms 以上かかることがあるため）
+      const img = renderSpecimen(m.kind, m.seed);
+      self.postMessage({ type: 'specimen', id: m.id, A: { width: img.width, height: img.height, data: img.data } }, [img.data.buffer]);
+      return;
+    }
     if (m.type === 'image') {
       images.set(m.key, { img: m.img, cache: new Map() });
       // 古い画像は捨てる（ライブ入力で増え続けないように）

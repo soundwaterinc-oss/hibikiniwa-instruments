@@ -27,6 +27,7 @@ export function createAnalysisPool(size = Math.max(2, Math.min(4, (navigator.har
       for (const w of workers) w.postMessage({ type: 'image', key: imgKey, img: { width: img.width, height: img.height, data: img.data } });
       return imgKey;
     },
+    specimen(kind, seed) { return call(workers[rr++ % workers.length], { type: 'specimen', kind, seed }); },
     analyze(params, opts) {
       const w = workers[rr++ % workers.length];
       return call(w, { type: 'analyze', key: imgKey, params, opts });

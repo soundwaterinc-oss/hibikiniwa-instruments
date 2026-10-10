@@ -56,12 +56,18 @@ export function createMaster(ctx, { lookahead = 0.005, threshold = -3, release =
   sum.connect(side).connect(rect).connect(smooth).connect(peakScale).connect(gainCurve).connect(vca.gain);
 
   const buf = new Float32Array(meter.fftSize);
-  let hold = -Infinity, holdAt = 0;
+  let hold = -Infinity, holdAt = 0, clipNode = clip, clipAmt = 0.3;
   return {
     input, output: meter, meter,
-    // DRV：0 で素通し
+    // DRV：0 で素通し。曲線は差し替えず、WaveShaper ごと入れ替える（curve の再代入を禁じる実装があるため）
     setDrive(amount, t = ctx.currentTime) {
-      if (amount > 0) clip.curve = softClipCurve(amount);
+      if (amount > 0 && Math.abs(amount - clipAmt) > 1e-3) {
+        const next = ctx.createWaveShaper();
+        next.curve = softClipCurve(amount);
+        dc.connect(next).connect(wet);
+        try { dc.disconnect(clipNode); clipNode.disconnect(); } catch { /* noop */ }
+        clipNode = next; clipAmt = amount;
+      }
       dry.gain.setTargetAtTime(amount > 0 ? 0 : 1, t, 0.02);
       wet.gain.setTargetAtTime(amount > 0 ? 1 / (1 + amount * 1.5) : 0, t, 0.02);
     },

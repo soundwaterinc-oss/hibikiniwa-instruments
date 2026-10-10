@@ -22,6 +22,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { background: var(--bg); color: var(--fg); }
 body {
   margin: 0; font: 400 13.5px/1.6 var(--mono); -webkit-font-smoothing: antialiased;

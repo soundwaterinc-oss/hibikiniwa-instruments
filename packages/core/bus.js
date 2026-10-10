@@ -19,7 +19,7 @@ export function createBus(app, { channel = globalThis.BroadcastChannel ? new Bro
   if (channel) {
     channel.onmessage = ({ data }) => {
       if (!data || data.app === app) return;
-      if (data.type === 'hello') { if (role === 'master' || data.app === 'monitor') send(true); return; }
+      if (data.type === 'hello') { send(true); return; }
       if (data.type === 'state') {
         peers.set(data.app, { ...data, seen: Date.now() });
         emit(data);
@@ -45,7 +45,8 @@ export function createBus(app, { channel = globalThis.BroadcastChannel ? new Bro
       send(true);
     },
     // state: { bpm, bar, phase(0..1 小節内), barsPerLoop, f0, scale:{ code, cents }, running }
-    publish(s, force = false) { state = { ...state, ...s }; if (role !== 'off' || force) send(force); },
+    // OFF でも状態は流す（入口のページの表示用）。追従は role==='master' の相手にだけ行う
+    publish(s, force = false) { state = { ...state, ...s }; send(force); },
     on(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     hello() { channel?.postMessage({ type: 'hello', app }); },
     peers,
