@@ -12,8 +12,8 @@ export function setupGarden(eng, bus, { onFollow, msg } = {}) {
   let lastMaster = null;
   let lastLock = '';
 
+  // 役割に関係なく状態を渡す（送るかどうかは bus が決める。入口のページが同期状態を表示するため）
   const publish = (force = false) => {
-    if (bus.role !== 'master') return;
     const cents = eng.scaleCents();
     bus.publish({
       f0: eng.baseHz(),
