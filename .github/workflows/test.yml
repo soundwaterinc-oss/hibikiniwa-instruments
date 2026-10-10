@@ -10,3 +10,13 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm test
+  # 音響スモークテスト（fixtures の実写真はリポジトリに含めないので、CI では生成標本だけで行う）
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run smoke

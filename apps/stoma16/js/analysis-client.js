@@ -38,6 +38,9 @@ export function createAnalysisPool(size = Math.max(2, Math.min(4, (navigator.har
       const t0 = performance.now();
       let done = 0, best = null;
       const total = stage1Candidates().length + top * stage2Candidates({}).length;
+      // evidence 地図は1本の Worker で作って全員に配る
+      const ev = await call(workers[0], { type: 'evidence', key, res: stage1Candidates()[0].res });
+      for (const w of workers.slice(1)) w.postMessage({ type: 'setEvidence', key, W: ev.W, E: ev.E });
       const runAll = async (cands) => {
         const q = cands.slice();
         const out = [];

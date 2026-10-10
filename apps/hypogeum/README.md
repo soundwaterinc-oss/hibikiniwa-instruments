@@ -6,7 +6,7 @@
 
 A low-frequency (20–250 Hz) drone instrument for the browser: 13 bass engines (Reese, 2-op FM, wavefolder, subharmonic divider, ladder, PWM, drawbar organ, kargyraa, didgeridoo, bowed bass, tape comb, sine, additive), 53 world tunings plus Scala `.scl`, a low-end master chain (subsonic HPF, mono crossover, missing-fundamental enhancer, soft clip, limiter), and the music-therapy layers of the original KUKURU — 40 Hz AM / isochronic, binaural, 0.1 Hz resonance-breathing guidance. Pure Web Audio, ES modules, no build step.
 
-**公開版**: https://soundwaterinc-oss.github.io/hypogeum-kkr40/
+**公開版**: https://soundwaterinc-oss.github.io/hibikiniwa-instruments/apps/hypogeum/ （響庭 楽器群のリポジトリ `hibikiniwa-instruments` の一部。共通基盤 `packages/core` を使います）
 
 ---
 
@@ -38,7 +38,7 @@ A low-frequency (20–250 Hz) drone instrument for the browser: 13 bass engines 
 
 | コード | 中身 | Α | Β | Γ |
 |---|---|---|---|---|
-| `ADD.H` | 加算合成（PeriodicWave の倍音列、旧KUKURUの音。既定） | 明るさ | ユニゾンの広がり | 飽和 |
+| `ADD.H` | 加算合成（PeriodicWave の倍音列、旧KUKURUの音。既定） | 倍音数（H.n からの増減） | 減衰（ρ からの増減） | 奇偶（O/E からの増減） |
 | `SIN.0` | 純正弦＋2・3倍音、tanh飽和 | 2倍音量 | 飽和 | 3倍音量 |
 | `R33S` | リース：デチューンしたノコギリ2〜4本、位相がゆっくりずれる | デチューン | 本数 | LPの開き |
 | `FM.2` | 2オペFM（比率 0.5/1/2/3）。正弦と鋸歯状のモジュレータを混ぜてフィードバックFM風に | 変調指数 | 比率 | 歪み |
@@ -64,7 +64,7 @@ A low-frequency (20–250 Hz) drone instrument for the browser: 13 bass engines 
    ─▶ MONO.x クロスオーバー（LR4）：下はL+Rをモノ化、上だけ W.st のM/S幅
    ─▶ ＋ PSY.h（低域を抽出 → 2・3倍音を生成 → 90Hz以上だけ足す）
    ─▶ ＋ 療法音（アイソクロニック／バイノーラル：モノ化・残響を通さない）
-   ─▶ セッション ─▶ VOL ─▶ DRV（任意のソフトクリップ）─▶ リミッター ─▶ 天井（≤0.95）
+   ─▶ セッション ─▶ VOL ─▶ 共通マスター段（packages/core/master.js：DCカット → DRV ソフトクリップ → ルックアヘッド・リミッター −1 dBTP 目安 → メーター）
 ```
 
 - **PSY.h** は「ミッシング・ファンダメンタル」効果を使います。2・3倍音があると、脳は鳴っていない基音を補って聴きます。基音を再生できない小型スピーカーやノートPCでも、低音の高さが感じられます。
@@ -126,48 +126,42 @@ A low-frequency (20–250 Hz) drone instrument for the browser: 13 bass engines 
 
 ## ローカルで動かす
 
-ES Modules を使うため、`index.html` をダブルクリック（`file://`）で開いても動きません。ローカルサーバー経由で開きます。
-
-**Windows**：`HYPOGEUM.bat` をダブルクリック → ブラウザで http://localhost:8080/ が開きます（Node.js が必要）。
-
-**どのOSでも**：
-
-```bash
-git clone https://github.com/soundwaterinc-oss/hypogeum-kkr40.git
-cd hypogeum-kkr40
-npm run serve          # 依存ゼロのNode製サーバー → http://localhost:8080/
-```
+リポジトリのルートで `HIBIKINIWA.bat` をダブルクリック（Windows）するか、`npm run serve` を実行し、http://localhost:8080/apps/hypogeum/ を開きます。ES Modules を使うため、`index.html` をダブルクリック（`file://`）で開いても動きません。
 
 ## テスト
 
+リポジトリのルートで：
+
 ```bash
-npm install            # devDependency（node-web-audio-api）だけを入れる
-npm test               # 音階・コードブック（一意性・平文の網羅・CODEBOOK.mdが最新か）・v1→v2変換
-npm run smoke          # 全エンジン × 基音 27.5 / 41.2 / 82.4Hz を各2秒オフライン描画して計測
+npm install            # devDependency（node-web-audio-api・@napi-rs/canvas）だけを入れる
+npm test               # 音階・コードブック・v1→v2変換（HYPOGEUM 分は tests/hypogeum.*.test.mjs）
+npm run smoke          # 全エンジン × 基音 27.5 / 41.2 / 82.4Hz を各2秒描画（scripts/smoke-hypogeum.mjs）
 npm run codebook       # docs/CODEBOOK.md を再生成
 ```
 
-`npm run smoke` の合格条件：NaNなし、ピーク ≤ 0.95、DC成分 < 0.01、スペクトル重心 < 500Hz。あわせて、40Hz AM が深さ1.0で包絡の最小値がほぼ0になること、全エンジンがタンプーラ（撥弦）モードで発音することを確認します。
+スモークの合格条件：NaNなし、ピーク ≤ 0.95、DC成分 < 0.01、スペクトル重心 < 500Hz、40Hz AM の深さ1.0で包絡の最小値がほぼ0、全エンジンがタンプーラ（撥弦）モードで発音すること。
+
+## GARDEN BUS
+
+ヘッダーの BUS ボタンで OFF → MST（master）→ FLW（follow）を切り替えます。
+- **FLW（STOMA//16 が master）**：STOMA のテンポに合わせ、呼吸ガイド（Φ.bpm）とドリフト（ΔF.hz）の周期を小節の整数倍にそろえ、吸い始めを小節の頭に合わせます。基音は STOMA の F₀ に追従します。
+- **MST**：基音と音階（コード・セント・鳴らしている度数）を流します。STOMA は低音（T トラック・SUB 音色）をこの音階の度数に量子化します。
 
 ## ファイル構成
 
 ```
-index.html            計器盤の骨組み（安全注意は平文）
-HYPOGEUM.bat          Windows用ローカル起動
-css/style.css         ガンメタル＋真鍮＋シアンの計器盤
-js/codebook.js        コード名 ↔ 平文の対応表（UI表示・CODEBOOK.md・v1キー対応の一元管理）
-js/scales.js          音階データ、.scl・ピッチ一覧のパーサー
-js/params.js          パラメータスキーマ、プログラム、v1→v2変換
-js/engine.js          Web Audio エンジン（ボイス管理、低域マスター、療法LFO、呼吸スケジューラ、タンプーラ）
-js/engines/*.js       音色エンジン（1ファイル1エンジン）と共通部品 util.js
-js/viz.js             位相ダイヤル（1200¢目盛り、12平均律基準線、20〜500Hz低域スコープ）
-js/main.js            UI生成、DECODE、保存、MIDI
-scripts/smoke.mjs     音響スモークテスト
-scripts/codebook.mjs  docs/CODEBOOK.md の生成
-scripts/serve.mjs     ローカルサーバー
-tests/                音階・コードブック・移行のテスト
-docs/RESEARCH.md      研究背景・出典・設計判断
-docs/CODEBOOK.md      全コードの平文対応表（自動生成）
+apps/hypogeum/
+  index.html          計器盤の骨組み（安全注意は平文）
+  css/style.css       固有のスタイル（共通の計器盤は packages/core/theme.css）
+  js/codebook.js      コード名 ↔ 平文の対応表（UI表示・CODEBOOK.md・v1キー対応の一元管理）
+  js/scales.js        音階データ、.scl・ピッチ一覧のパーサー
+  js/params.js        パラメータスキーマ、プログラム、v1→v2変換
+  js/engine.js        Web Audio エンジン（ボイス管理、低域処理、療法LFO、呼吸スケジューラ、タンプーラ）
+  js/engines/*.js     音色エンジン（1ファイル1エンジン）と共通部品 util.js
+  js/viz.js           位相ダイヤル（1200¢目盛り、12平均律基準線、20〜500Hz低域スコープ）
+  js/garden.js        GARDEN BUS 連携
+  js/main.js          UI（packages/core の部品で組む）
+  docs/RESEARCH.md    研究背景・出典・設計判断（エビデンスの強さを書き分け）
 ```
 
 ## 免責

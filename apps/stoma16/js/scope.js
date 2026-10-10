@@ -55,11 +55,10 @@ export class Scope {
     if (tracks) for (const t of tracks.tracks) for (const e of t.events) if (e.cell >= 0) vOf.set(e.cell, t.v);
     const trackRgb = this.trackColors.map(hexRgb);
     const clsRgb = new Map((A.classes?.list || []).map((cl) => [cl.id, cl.rgb.map((x) => Math.round(Math.min(255, x * 255 * 1.15)))]));
-    for (let i = 0; i < lab.length; i++) {
-      const l = lab[i]; if (l < 0) continue;
-      const x = i % W;
-      const e = (x < W - 1 && lab[i + 1] !== l) || (i + W < lab.length && lab[i + W] !== l);
-      if (!e) continue;
+    // 境界画素の一覧は Worker が作る（A.edges）。無いとき（古い結果）は全画素を調べる
+    const edges = A.edges || Int32Array.from({ length: lab.length }, (_, i) => i).filter((i) => lab[i] >= 0 && ((i % W < W - 1 && lab[i + 1] !== lab[i]) || (i + W < lab.length && lab[i + W] !== lab[i])));
+    for (const i of edges) {
+      const l = lab[i];
       const cell = A.cells[l];
       let rgb, a;
       if (cell.bg) { rgb = [90, 90, 90]; a = 40; }
