@@ -127,7 +127,9 @@ async function loadUrl(url, kind) { loadBlob(await (await fetch(url)).blob(), ki
 function loadFile(f) { if (f?.type?.startsWith('image/')) loadBlob(f, 'user'); }
 
 const LOCAL = [];
+// fixtures/ はリポジトリに含めない実写真なので、ローカルサーバーで開いたときだけ探す（公開版で 404 を出さない）
 async function probeLocal() {
+  if (!['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) { buildSlides(); return; }
   for (const [id, file] of [['local-root', 'root_xs.jpg'], ['local-moss', 'moss_leaf.jpg']]) {
     try { const r = await fetch(`../../fixtures/${file}`, { method: 'HEAD' }); if (r.ok) LOCAL.push({ id, file }); } catch { /* 公開版には無い */ }
   }

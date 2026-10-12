@@ -9,7 +9,7 @@ import { autoTune } from '../apps/stoma16/js/analysis/auto.js';
 import { DEFAULTS, styleParams } from '../apps/stoma16/js/params.js';
 import { STYLE_IDS } from '../apps/stoma16/js/styles.js';
 import { renderBars } from '../apps/stoma16/js/session.js';
-import { playModel, playNative, MODEL_TRIM } from '../apps/stoma16/js/voices.js';
+import { playModel, playNative, MODEL_TRIM, reseedVoices } from '../apps/stoma16/js/voices.js';
 import { MODEL_CODES } from '../apps/stoma16/js/codebook.js';
 
 const SR = 48000;
@@ -64,6 +64,7 @@ export async function smokeStoma() {
   for (const m of Object.keys(MODEL_CODES)) {
     const ctx = new OfflineAudioContext(1, SR * 2, SR);
     const out = ctx.createGain(); out.connect(ctx.destination);
+    reseedVoices(7); // 粒の位置などの乱数を毎回同じ状態から始める（実行環境で結果が変わらないように）
     const ev = { aQ: 0.5, eQ: 0.5, per: 50, tone: null };
     const o = { tun: 1, dc: 1, m1: 0.5, m2: 0.5, f0: 41.2, scale: null, stepDur: 0.03 };
     if (m === 'NAT') playNative(ctx, 'TWL', 0, 0.01, MODEL_TRIM.NAT, out, ev, o, { throwBus: ctx.createGain() });

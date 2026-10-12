@@ -128,7 +128,9 @@ export function playModel(ctx, m, t, vel, out, ev, o) {
     case 'GRN': {
       const k = kit(ctx), len = (0.04 + aQ * 0.1 + m1 * 0.15), rate = (0.5 * 2 ** Math.floor((1 - aQ) * 3)) * (0.75 + m2 * 0.5) * tun, off = rnd() * 1.1;
       const s = ctx.createBufferSource(); s.buffer = k.chord; s.playbackRate.value = rate;
-      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + 0.01); g.gain.setTargetAtTime(0, t + len * 0.6, len * 0.3 * dc);
+      // 和音のバッファは exp(-0.9t) で減衰しているので、切り出し位置ぶんの減衰を打ち消して音量をそろえる
+      const comp = Math.exp(0.9 * off);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel * comp, t + 0.01); g.gain.setTargetAtTime(0, t + len * 0.6, len * 0.3 * dc);
       s.connect(g).connect(out); s.start(t, off, len * 3 * rate); break;
     }
     case 'VOX': {
